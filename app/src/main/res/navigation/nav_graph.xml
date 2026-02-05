@@ -1,0 +1,50 @@
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/profileFragment">
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.timur.xpump.ui.profile.ProfileFragment"
+        android:label="Профиль">
+        <action
+            android:id="@+id/action_profileFragment_to_workoutHistoryFragment"
+            app:destination="@id/workoutHistoryFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_workoutDetailsFragment"
+            app:destination="@id/workoutDetailsFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/workoutHistoryFragment"
+        android:name="com.timur.xpump.ui.history.WorkoutHistoryFragment"
+        android:label="История" >
+        <action
+            android:id="@+id/action_workoutHistoryFragment_to_workoutDetailsFragment"
+            app:destination="@id/workoutDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/workoutDetailsFragment"
+        android:name="com.timur.xpump.ui.workout_details.WorkoutDetailsFragment"
+        android:label="Workout Details">
+
+        <argument
+            android:name="workout_id"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
+        <argument
+            android:name="workout_name"
+            app:argType="string"
+            android:defaultValue="Тренировка" />
+
+        <argument
+            android:name="mode"
+            app:argType="string"
+            android:defaultValue="edit" />
+    </fragment>
+
+</navigation>
