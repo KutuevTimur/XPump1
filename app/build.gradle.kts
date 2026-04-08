@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
 }
 
 android {
@@ -57,4 +58,19 @@ dependencies {
 
     //  строка для исправления конфликта версий
     implementation("androidx.fragment:fragment-ktx:1.7.1")
+
+
+    // Для работы со StateFlow и жизненным циклом
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+// Корутины
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion") // Для поддержки Flow и Coroutines [cite: 217]
+    kapt("androidx.room:room-compiler:$roomVersion") // Обработчик аннотаций [cite: 217]
 }
+

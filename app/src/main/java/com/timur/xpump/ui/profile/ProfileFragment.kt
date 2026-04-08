@@ -23,40 +23,31 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentProfileBinding.bind(view)
 
-        
+        // Подписываемся на состояние (UDF подход из твоего плана) [cite: 90]
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.workoutCount.collectLatest { count ->
-                binding.tvProfileInfo.text = count.toString()
+            viewModel.uiState.collect { state ->
+                binding.tvProfileInfo.text = "Уровень: ${state.level}\nXP: ${state.totalXp}/100"
+                // Если есть прогресс-бар в xml, можно добавить state.totalXp
             }
         }
 
-        // показать текущее значение
-        //binding.tvCount.text = viewModel.workoutCount.toString()
-
+        // Обновляем данные при входе на экран
+        viewModel.refreshProfile()
 
         binding.btnStartWorkout.setOnClickListener {
-
-            val workout = WorkoutStorage.createWorkout("Новая тренировка")
-
+            // Твой текущий код запуска тренировки
+            val workout = WorkoutStorage.createWorkout("Тренировка #${WorkoutStorage.getAllWorkouts().size + 1}")
             val bundle = Bundle().apply {
                 putLong("workout_id", workout.id)
-                putString("workout_name", workout.name)
                 putString("mode", "edit")
             }
-
-            findNavController().navigate(
-                R.id.action_profileFragment_to_workoutDetailsFragment,
-                bundle
-            )
+            findNavController().navigate(R.id.action_profileFragment_to_workoutDetailsFragment, bundle)
         }
 
         binding.btnOpenHistory.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_profileFragment_to_workoutHistoryFragment
-            )
+            findNavController().navigate(R.id.action_profileFragment_to_workoutHistoryFragment)
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

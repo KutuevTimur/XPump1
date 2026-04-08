@@ -3,12 +3,15 @@ package com.timur.xpump.ui.history
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.timur.xpump.R
+import com.timur.xpump.ViewModelFactory
+import com.timur.xpump.XPumpApp
 import com.timur.xpump.databinding.FragmentWorkoutHistoryBinding
-import com.timur.xpump.data.WorkoutStorage
-import com.timur.xpump.ui.workout_details.WorkoutDetailsFragment
+import kotlinx.coroutines.launch
 
 class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
 
@@ -16,6 +19,11 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
     private val binding get() = _binding!!
 
     private lateinit var workoutAdapter: WorkoutAdapter
+
+    // 1. Подключаем нашу новую ViewModel через Фабрику, передавая ей базу данных
+    private val viewModel: WorkoutHistoryViewModel by viewModels {
+        ViewModelFactory((requireActivity().application as XPumpApp).repository)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -33,19 +41,21 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
                 R.id.action_workoutHistoryFragment_to_workoutDetailsFragment,
                 bundle
             )
-
         }
 
         binding.rvHistory.layoutManager = LinearLayoutManager(requireContext())
         binding.rvHistory.adapter = workoutAdapter
 
-        // Загружаем все тренировки из WorkoutStorage
-        workoutAdapter.submitList(WorkoutStorage.getAllWorkouts())
+        // 2. Подписываемся на "живой" поток данных из базы (Room)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.workouts.collect { list ->
+                workoutAdapter.submitList(list) // Адаптер обновится сам, как только в БД что-то изменится
+            }
+        }
 
-        // Временно добавляем тренировку, чтобы показать её в истории
+        // 3. Кнопка теперь дает команду ViewModel сохранить данные навсегда
         binding.btnAddWorkout.setOnClickListener {
-            val workout = WorkoutStorage.createWorkout("Тренировка ${System.currentTimeMillis()}")
-            workoutAdapter.submitList(WorkoutStorage.getAllWorkouts()) // обновляем список
+            viewModel.addRandomWorkout()
         }
     }
 
