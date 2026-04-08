@@ -1,35 +1,42 @@
 package com.timur.xpump.ui.profile
 
 import androidx.lifecycle.ViewModel
-import com.timur.xpump.data.WorkoutStorage
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import com.timur.xpump.data.repository.WorkoutRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(private val repository: WorkoutRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileState())
-    val uiState: StateFlow<ProfileState> = _uiState
-
-    // Модель состояния экрана для иммутабельности (как в твоем плане) [cite: 147-150]
     data class ProfileState(
         val level: Int = 1,
         val totalXp: Int = 0,
-        val workoutCount: Int = 0,
-        val xpToNextLevel: Int = 100
+        val workoutCount: Int = 0
     )
 
-    fun refreshProfile() {
-        val workouts = WorkoutStorage.getAllWorkouts()
+    // Слушаем настоящую базу: как только там появилась тренировка, уровень растет!
+    val uiState: StateFlow<ProfileState> = repository.allWorkouts.map { workouts ->
         val count = workouts.size
-
-        // Допустим, 1 тренировка = 50 XP (потом вынесем в UseCase) [cite: 284-285]
-        val xp = count * 50
+        val xp = count * 50 // 50 опыта за 1 тренировку
         val lvl = (xp / 100) + 1
-
-        _uiState.value = ProfileState(
+        ProfileState(
             level = lvl,
             totalXp = xp % 100,
             workoutCount = count
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ProfileState()
+    )
+
+    fun createNewWorkout(name: String, onCreated: (Long) -> Unit) {
+        viewModelScope.launch {
+            val id = repository.createEmptyWorkout(name)
+            onCreated(id)
+        }
     }
 }

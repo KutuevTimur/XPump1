@@ -1,47 +1,49 @@
 package com.timur.xpump.ui.workout_details
 
 import androidx.lifecycle.ViewModel
-import com.timur.xpump.data.WorkoutStorage
-import com.timur.xpump.model.WorkoutSet
+import androidx.lifecycle.viewModelScope
+import com.timur.xpump.data.db.entities.WorkoutWithSets
+import com.timur.xpump.data.repository.WorkoutRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class WorkoutDetailsViewModel : ViewModel() {
+class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewModel() {
 
     private var workoutId: Long = -1L
 
-    fun init(workoutId: Long) {
-        if (this.workoutId == -1L) {
-            this.workoutId = workoutId
+    // Реактивное состояние экрана
+    private val _workoutData = MutableStateFlow<WorkoutWithSets?>(null)
+    val workoutData: StateFlow<WorkoutWithSets?> = _workoutData
+
+    fun init(id: Long) {
+        if (workoutId == -1L) {
+            workoutId = id
+            // Начинаем слушать базу данных
+            viewModelScope.launch {
+                repository.getWorkoutFlow(id).collect { data ->
+                    _workoutData.value = data
+                }
+            }
         }
-    }
-
-    fun getWorkoutName(): String {
-        return WorkoutStorage.getWorkout(workoutId)?.name ?: "Тренировка"
-    }
-
-    fun getSets(): List<WorkoutSet> {
-        return WorkoutStorage.getWorkout(workoutId)?.sets ?: emptyList()
-    }
-
-    fun getSetsCount(): Int {
-        return getSets().size
     }
 
     fun addSet(weightText: String, repsText: String): Boolean {
         val weight = weightText.toIntOrNull()
         val reps = repsText.toIntOrNull()
+        if (weight == null || reps == null || weight <= 0 || reps <= 0) return false
 
-        if (weight == null || reps == null) return false
-        if (weight <= 0 || reps <= 0) return false
-
-        val workout = WorkoutStorage.getWorkout(workoutId) ?: return false
-        workout.sets.add(WorkoutSet(weight, reps))
+        // Пишем в БД!
+        viewModelScope.launch {
+            repository.addSet(workoutId, weight, reps)
+        }
         return true
     }
 
     fun removeSet() {
-        val workout = WorkoutStorage.getWorkout(workoutId) ?: return
-        if (workout.sets.isNotEmpty()) {
-            workout.sets.removeAt(workout.sets.lastIndex)
+        // Удаляем из БД!
+        viewModelScope.launch {
+            repository.removeLastSet(workoutId)
         }
     }
 }

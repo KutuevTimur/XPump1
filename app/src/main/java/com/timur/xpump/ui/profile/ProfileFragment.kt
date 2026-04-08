@@ -3,53 +3,55 @@ package com.timur.xpump.ui.profile
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.timur.xpump.R
-import com.timur.xpump.databinding.FragmentProfileBinding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.collectLatest
+import androidx.navigation.fragment.findNavController
+import com.timur.xpump.R
+import com.timur.xpump.ViewModelFactory
+import com.timur.xpump.XPumpApp
+import com.timur.xpump.databinding.FragmentProfileBinding
 import kotlinx.coroutines.launch
-import com.timur.xpump.data.WorkoutStorage
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ProfileViewModel by viewModels()
 
+    // Подключаем ViewModel к настоящей БД
+    private val viewModel: ProfileViewModel by viewModels {
+        ViewModelFactory((requireActivity().application as XPumpApp).repository)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentProfileBinding.bind(view)
 
-        // Подписываемся на состояние (UDF подход из твоего плана) [cite: 90]
+        // Обновляем текст на экране на основе базы данных
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
-                binding.tvProfileInfo.text = "Уровень: ${state.level}\nXP: ${state.totalXp}/100"
-                // Если есть прогресс-бар в xml, можно добавить state.totalXp
+                binding.tvProfileInfo.text = "Уровень: ${state.level}\nТренировок: ${state.workoutCount}\nXP: ${state.totalXp}/100"
             }
         }
 
-        // Обновляем данные при входе на экран
-        viewModel.refreshProfile()
-
         binding.btnStartWorkout.setOnClickListener {
-            // Твой текущий код запуска тренировки
-            val workout = WorkoutStorage.createWorkout("Тренировка #${WorkoutStorage.getAllWorkouts().size + 1}")
-            val bundle = Bundle().apply {
-                putLong("workout_id", workout.id)
-                putString("mode", "edit")
+            // Пишем в настоящую БД, а не в оперативку!
+            viewModel.createNewWorkout("Новая тренировка") { newWorkoutId ->
+                val bundle = Bundle().apply {
+                    putLong("workout_id", newWorkoutId)
+                    putString("mode", "edit")
+                }
+                findNavController().navigate(R.id.action_profileFragment_to_workoutDetailsFragment, bundle)
             }
-            findNavController().navigate(R.id.action_profileFragment_to_workoutDetailsFragment, bundle)
         }
 
         binding.btnOpenHistory.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_workoutHistoryFragment)
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
+

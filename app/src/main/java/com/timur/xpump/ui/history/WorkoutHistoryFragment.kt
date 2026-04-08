@@ -64,3 +64,4 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
         _binding = null
     }
 }
+
