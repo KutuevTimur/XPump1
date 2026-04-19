@@ -41,7 +41,7 @@ class WorkoutHistoryViewModel(private val repository: WorkoutRepository) : ViewM
 
         // Добавляем несколько случайных подходов для новой тренировки
         for (i in 1..3) {
-            val weight = (50..100).random().toDouble()
+            val weight = (50..100).random() // Changed to Int directly
             val reps = (8..12).random()
             repository.insertWorkoutSet(WorkoutSetEntity(workoutId = workoutId, weight = weight, reps = reps))
         }
