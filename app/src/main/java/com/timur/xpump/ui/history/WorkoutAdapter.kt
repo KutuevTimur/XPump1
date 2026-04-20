@@ -5,6 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.timur.xpump.databinding.ItemWorkoutBinding
 import com.timur.xpump.model.Workout
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class WorkoutAdapter(
     private val onClick: (Long) -> Unit // callback для перехода в детали тренировки
@@ -32,7 +35,10 @@ class WorkoutAdapter(
     inner class WorkoutViewHolder(private val binding: ItemWorkoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(workout: Workout) {
             binding.tvWorkoutName.text = workout.name
-            binding.tvSetsCount.text = "Подходов: ${workout.sets.size}"
+
+            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            val dateString = dateFormat.format(Date(workout.date))
+            binding.tvWorkoutDateAndSetsCount.text = "Дата: $dateString | Подходов: ${workout.sets.size}"
 
             // По клику на тренировку открываем WorkoutDetailsFragment
             binding.root.setOnClickListener {
@@ -41,4 +47,3 @@ class WorkoutAdapter(
         }
     }
 }
-

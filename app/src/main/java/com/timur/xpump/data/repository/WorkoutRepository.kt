@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 class WorkoutRepository(private val workoutDao: WorkoutDao) {
 
-    // ЭТОЙ СТРОЧКИ У ТЕБЯ НЕ ХВАТАЛО:
+
     val allWorkoutsWithSets: Flow<List<WorkoutWithSets>> = workoutDao.getAllWorkoutsWithSets()
 
     val allWorkouts: Flow<List<WorkoutEntity>> = workoutDao.getAllWorkouts()
@@ -44,5 +44,20 @@ class WorkoutRepository(private val workoutDao: WorkoutDao) {
 
     suspend fun insertWorkoutSet(workoutSet: WorkoutSetEntity) {
         workoutDao.insertSet(workoutSet)
+    }
+
+    suspend fun addSet(workoutId: Long, weight: Int, reps: Int, exerciseName: String) {
+        workoutDao.insertSet(
+            WorkoutSetEntity(
+                workoutId = workoutId,
+                weight = weight,
+                reps = reps,
+                exerciseName = exerciseName
+            )
+        )
+    }
+
+    fun getMaxWeightForExercise(exerciseName: String): Flow<Int?> {
+        return workoutDao.getMaxWeightForExercise(exerciseName)
     }
 }

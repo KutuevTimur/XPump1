@@ -4,19 +4,19 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.timur.xpump.databinding.ItemSetBinding
+import com.timur.xpump.model.WorkoutSet
 
 class SetsAdapter : RecyclerView.Adapter<SetsAdapter.SetViewHolder>() {
 
-    private val items = mutableListOf<String>() // список строк
+    private val items = mutableListOf<WorkoutSet>()
 
-    // Этот метод обновляет список, который будет показываться в RecyclerView
-    fun submitList(newList: List<String>) {
+    // Обновляем список объектов WorkoutSet
+    fun submitList(newList: List<WorkoutSet>) {
         items.clear()
         items.addAll(newList)
-        notifyDataSetChanged() // пока так, просто и понятно
+        notifyDataSetChanged()
     }
 
-    //Метод для создания ViewHolder'а, который будет "картинкой" для каждой строки
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
         val binding = ItemSetBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -25,19 +25,19 @@ class SetsAdapter : RecyclerView.Adapter<SetsAdapter.SetViewHolder>() {
         )
         return SetViewHolder(binding)
     }
-    // Связываем данные с ViewHolder'ом
+
     override fun onBindViewHolder(holder: SetViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(items[position], position + 1)
     }
 
-    // Получаем размер списка
     override fun getItemCount(): Int = items.size
 
-
-    // Внутренний ViewHolder, который будет показывать одну строку
     class SetViewHolder(private val binding: ItemSetBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(text: String) {
-            binding.tvSetText.text = text
+        fun bind(workoutSet: WorkoutSet, position: Int) {
+            binding.tvSetNumberBadge.text = position.toString()
+            binding.tvExerciseName.text = workoutSet.exerciseName
+            binding.tvSetDetails.text = "${workoutSet.weight} кг x ${workoutSet.reps} повторений"
+            binding.tvSetWeightAndReps.text = "${workoutSet.weight} kg x ${workoutSet.reps}"
         }
     }
 }

@@ -10,16 +10,12 @@ class WorkoutSetsAdapter : RecyclerView.Adapter<WorkoutSetsAdapter.VH>() {
 
     private val items = mutableListOf<WorkoutSet>()
 
-
-    // Этот метод обновляет список
     fun submitList(list: List<WorkoutSet>) {
         items.clear()
         items.addAll(list)
-        notifyDataSetChanged() // пока просто и понятно
+        notifyDataSetChanged()
     }
 
-
-// Метод для создания ViewHolder'а
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val binding = ItemWorkoutSetBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -29,20 +25,17 @@ class WorkoutSetsAdapter : RecyclerView.Adapter<WorkoutSetsAdapter.VH>() {
         return VH(binding)
     }
 
-    // Связываем данные с ViewHolder'ом
     override fun onBindViewHolder(holder: VH, position: Int) {
         holder.bind(items[position], position)
     }
 
-    // Возвращаем количество элементов в списке
     override fun getItemCount(): Int = items.size
 
-
-    // ViewHolder для элемента списка
     class VH(private val binding: ItemWorkoutSetBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(set: WorkoutSet, position: Int) {
-            binding.tvSetText.text = "${position + 1}) ${set.weight} кг × ${set.reps}"
+            binding.tvSetNumber.text = (position + 1).toString()
+            binding.tvSetName.text = set.exerciseName
+            binding.tvSetInfo.text = "${set.weight} кг x ${set.reps}"
         }
     }
 }
-

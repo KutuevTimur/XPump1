@@ -11,20 +11,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar // Import Calendar for date generation
+import java.util.Calendar
 
 class WorkoutHistoryViewModel(private val repository: WorkoutRepository) : ViewModel() {
 
-    // Читаем тренировки из базы.
-    // map - превращает WorkoutEntity (формат базы) в Workout (твою модель данных)
     val workouts: StateFlow<List<Workout>> = repository.allWorkoutsWithSets.map { list ->
         list.map { item ->
             Workout(
                 id = item.workout.id,
                 name = item.workout.name,
-                // Мапим подходы из БД в модели для UI
+                date = item.workout.date, // Теперь дата прокидывается!
                 sets = item.sets.map {
-                    com.timur.xpump.model.WorkoutSet(it.weight, it.reps)
+                    com.timur.xpump.model.WorkoutSet(
+                        weight = it.weight,
+                        reps = it.reps,
+                        exerciseName = it.exerciseName ?: "Упражнение"
+                    )
                 }.toMutableList()
             )
         }
@@ -39,11 +41,11 @@ class WorkoutHistoryViewModel(private val repository: WorkoutRepository) : ViewM
         val newWorkout = WorkoutEntity(name = "Workout $timestamp", date = timestamp)
         val workoutId = repository.insertWorkout(newWorkout)
 
-        // Добавляем несколько случайных подходов для новой тренировки
         for (i in 1..3) {
-            val weight = (50..100).random() // Changed to Int directly
+            val weight = (50..100).random()
             val reps = (8..12).random()
-            repository.insertWorkoutSet(WorkoutSetEntity(workoutId = workoutId, weight = weight, reps = reps))
+            val exerciseName = if (i % 2 == 0) "Жим" else "Присед"
+            repository.addSet(workoutId, weight, reps, exerciseName)
         }
     }
 }

@@ -46,4 +46,15 @@ class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewM
             repository.removeLastSet(workoutId)
         }
     }
+
+    fun addSet(weightText: String, repsText: String, exerciseName: String): Boolean {
+        val weight = weightText.toIntOrNull()
+        val reps = repsText.toIntOrNull()
+        if (weight == null || reps == null || weight <= 0 || reps <= 0 || exerciseName.isEmpty()) return false
+
+        viewModelScope.launch {
+            repository.addSet(workoutId, weight, reps, exerciseName)
+        }
+        return true
+    }
 }

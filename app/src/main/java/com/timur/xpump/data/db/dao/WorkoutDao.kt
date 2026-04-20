@@ -55,6 +55,10 @@ interface WorkoutDao {
     @Query("SELECT * FROM workouts ORDER BY date DESC")
     fun getAllWorkoutsWithSets(): Flow<List<WorkoutWithSets>> // Именно так!
 
+    @Query("SELECT MAX(weight) FROM workout_sets WHERE exerciseName LIKE :exerciseName")
+    fun getMaxWeightForExercise(exerciseName: String): Flow<Int?>
+
+
 
 
 

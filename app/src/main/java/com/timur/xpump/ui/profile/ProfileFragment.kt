@@ -29,7 +29,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         // Обновляем текст на экране на основе базы данных
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
-                binding.tvProfileInfo.text = "Уровень: ${state.level}\nТренировок: ${state.workoutCount}\nXP: ${state.totalXp}/100"
+                binding.tvProfileLevel.text = "Уровень: ${state.level}"
+                binding.tvProfileXp.text = "Опыт: ${state.totalXp}/100"
+                binding.tvWorkoutCount.text = "Тренировок: ${state.workoutCount}"
+                binding.tvBenchPressPRValue.text = state.benchPressRank
+                binding.tvSquatPRValue.text = state.squatRank
             }
         }
 
@@ -54,4 +58,3 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         _binding = null
     }
 }
-
