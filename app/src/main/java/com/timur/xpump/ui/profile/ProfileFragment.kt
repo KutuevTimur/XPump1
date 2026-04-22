@@ -37,20 +37,61 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
         }
 
-        binding.btnStartWorkout.setOnClickListener {
-            // Пишем в настоящую БД, а не в оперативку!
-            viewModel.createNewWorkout("Новая тренировка") { newWorkoutId ->
-                val bundle = Bundle().apply {
-                    putLong("workout_id", newWorkoutId)
-                    putString("mode", "edit")
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Note: Since ProfileViewModel doesn't expose the actual workout object,
+            // we'll rely on the existing logic or adjust the ViewModel if needed.
+            // Based on instructions, using the ID from activeWorkoutId.
+            viewModel.activeWorkoutId.collect { id ->
+                if (id != null) {
+                    binding.btnStartWorkout.text = "Продолжить тренировку"
+                    binding.btnStartWorkout.setOnClickListener {
+                        navigateToWorkout(id)
+                    }
+                } else {
+                    binding.btnStartWorkout.text = "Начать тренировку"
+                    binding.btnStartWorkout.setOnClickListener {
+                        showStartDialog()
+                    }
                 }
-                findNavController().navigate(R.id.action_profileFragment_to_workoutDetailsFragment, bundle)
             }
         }
 
         binding.btnOpenHistory.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_workoutHistoryFragment)
         }
+    }
+
+    private fun navigateToWorkout(id: Long) {
+        val bundle = Bundle().apply {
+            putLong("workout_id", id)
+            putString("mode", "edit")
+        }
+        findNavController().navigate(R.id.action_profileFragment_to_workoutDetailsFragment, bundle)
+    }
+
+    private fun showStartDialog() {
+        // 1. Создаем поле ввода прямо в коде
+        val input = android.widget.EditText(requireContext())
+        input.hint = "Напр: День груди или Тяга"
+        input.setPadding(60, 40, 60, 40) // Немного отступов для красоты
+
+        // 2. Строим стандартный диалог Android
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Как назовем тренировку?")
+            .setMessage("Оставь пустым, чтобы использовать дату")
+            .setView(input)
+            .setPositiveButton("Начать") { _, _ ->
+                val enteredName = input.text.toString().trim()
+
+                // Если имя пустое, передаем пустую строку, логика отображения сработает в истории
+                val finalName = if (enteredName.isEmpty()) "Тренировка" else enteredName
+
+                viewModel.createNewWorkout(finalName) { newWorkoutId ->
+                    navigateToWorkout(newWorkoutId)
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     override fun onDestroyView() {

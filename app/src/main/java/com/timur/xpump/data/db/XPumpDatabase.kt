@@ -10,7 +10,7 @@ import com.timur.xpump.data.db.entities.WorkoutSetEntity
 
 @Database(
     entities = [WorkoutEntity::class, WorkoutSetEntity::class],
-    version = 1,
+    version = 6,
     exportSchema = false
 )
 abstract class XPumpDatabase : RoomDatabase() {

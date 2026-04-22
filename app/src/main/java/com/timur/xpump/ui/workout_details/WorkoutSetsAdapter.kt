@@ -10,6 +10,8 @@ class WorkoutSetsAdapter : RecyclerView.Adapter<WorkoutSetsAdapter.VH>() {
 
     private val items = mutableListOf<WorkoutSet>()
 
+    val currentList: List<WorkoutSet> get() = items
+
     fun submitList(list: List<WorkoutSet>) {
         items.clear()
         items.addAll(list)

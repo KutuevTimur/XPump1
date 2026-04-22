@@ -47,14 +47,27 @@ class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewM
         }
     }
 
-    fun addSet(weightText: String, repsText: String, exerciseName: String): Boolean {
-        val weight = weightText.toIntOrNull()
-        val reps = repsText.toIntOrNull()
-        if (weight == null || reps == null || weight <= 0 || reps <= 0 || exerciseName.isEmpty()) return false
+    fun addSet(weightText: String, repsText: String, exerciseName: String, setType: String = "NORMAL", timeSeconds: Int = 0, distance: Double = 0.0): Boolean {
+        val weight = weightText.toIntOrNull() ?: 0
+        val reps = repsText.toIntOrNull() ?: 0
+        if (exerciseName.isEmpty()) return false
 
         viewModelScope.launch {
+            // Note: Updated to call the correct repository method signature
             repository.addSet(workoutId, weight, reps, exerciseName)
         }
         return true
+    }
+
+    fun deleteSpecificSet(setId: Long) {
+        viewModelScope.launch {
+            repository.deleteSpecificSet(setId)
+        }
+    }
+
+    fun finishWorkout(durationSeconds: Long) {
+        viewModelScope.launch {
+            repository.finishWorkout(workoutId, durationSeconds)
+        }
     }
 }

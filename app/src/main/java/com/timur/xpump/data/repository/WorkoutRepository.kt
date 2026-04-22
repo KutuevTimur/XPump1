@@ -8,6 +8,20 @@ import kotlinx.coroutines.flow.Flow
 
 class WorkoutRepository(private val workoutDao: WorkoutDao) {
 
+    val activeWorkout = workoutDao.getActiveWorkout()
+
+    suspend fun startActiveWorkout(name: String): Long {
+        val workout = WorkoutEntity(
+            name = name,
+            isActive = true,
+            startTime = System.currentTimeMillis() // Фиксируем время старта!
+        )
+        return workoutDao.insertWorkout(workout)
+    }
+
+    suspend fun setWorkoutInactive(id: Long) {
+        workoutDao.updateActiveStatus(id, false)
+    }
 
     val allWorkoutsWithSets: Flow<List<WorkoutWithSets>> = workoutDao.getAllWorkoutsWithSets()
 
@@ -59,5 +73,20 @@ class WorkoutRepository(private val workoutDao: WorkoutDao) {
 
     fun getMaxWeightForExercise(exerciseName: String): Flow<Int?> {
         return workoutDao.getMaxWeightForExercise(exerciseName)
+    }
+
+    suspend fun deleteWorkout(workoutId: Long) {
+        // Сначала удаляем все подходы этой тренировки, потом саму тренировку (чтобы не было мусора в базе)
+        workoutDao.deleteSetsByWorkoutId(workoutId)
+        workoutDao.deleteWorkoutById(workoutId)
+    }
+
+    suspend fun deleteSpecificSet(setId: Long) {
+        workoutDao.deleteSetById(setId)
+    }
+
+    suspend fun finishWorkout(workoutId: Long, duration: Long) {
+        workoutDao.updateWorkoutDuration(workoutId, duration)
+        workoutDao.updateActiveStatus(workoutId, false)
     }
 }

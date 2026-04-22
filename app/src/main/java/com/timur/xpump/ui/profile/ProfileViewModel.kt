@@ -12,6 +12,10 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel(private val repository: WorkoutRepository) : ViewModel() {
 
+    val activeWorkoutId: StateFlow<Long?> = repository.activeWorkout
+        .map { it?.id }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     data class ProfileState(
         val level: Int = 1,
         val totalXp: Int = 0,
@@ -61,7 +65,7 @@ class ProfileViewModel(private val repository: WorkoutRepository) : ViewModel() 
 
     fun createNewWorkout(name: String, onCreated: (Long) -> Unit) {
         viewModelScope.launch {
-            val id = repository.createEmptyWorkout(name)
+            val id = repository.startActiveWorkout(name)
             onCreated(id)
         }
     }

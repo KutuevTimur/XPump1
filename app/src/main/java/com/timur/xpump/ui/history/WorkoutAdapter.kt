@@ -10,10 +10,12 @@ import java.util.Date
 import java.util.Locale
 
 class WorkoutAdapter(
-    private val onClick: (Long) -> Unit // callback для перехода в детали тренировки
+    private val onWorkoutClicked: (Long) -> Unit // callback для перехода в детали тренировки
 ) : RecyclerView.Adapter<WorkoutAdapter.WorkoutViewHolder>() {
 
     private val items = mutableListOf<Workout>()
+
+    val currentList: List<Workout> get() = items
 
     fun submitList(list: List<Workout>) {
         items.clear()
@@ -35,15 +37,12 @@ class WorkoutAdapter(
     inner class WorkoutViewHolder(private val binding: ItemWorkoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(workout: Workout) {
             binding.tvWorkoutName.text = workout.name
-
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            val dateString = dateFormat.format(Date(workout.date))
-            binding.tvWorkoutDateAndSetsCount.text = "Дата: $dateString | Подходов: ${workout.sets.size}"
-
-            // По клику на тренировку открываем WorkoutDetailsFragment
-            binding.root.setOnClickListener {
-                onClick(workout.id)
-            }
+            // Считаем минуты
+            val mins = workout.duration / 60
+            val durationText = if (mins > 0) " • $mins мин" else " • < 1 мин"
+            binding.tvWorkoutDate.text = "${workout.dateFormatted}$durationText • Подходов: ${workout.sets.size}"
+            
+            binding.root.setOnClickListener { onWorkoutClicked(workout.id) }
         }
     }
 }

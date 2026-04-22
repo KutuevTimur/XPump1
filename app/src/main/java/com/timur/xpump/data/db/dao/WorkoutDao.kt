@@ -58,8 +58,20 @@ interface WorkoutDao {
     @Query("SELECT MAX(weight) FROM workout_sets WHERE exerciseName LIKE :exerciseName")
     fun getMaxWeightForExercise(exerciseName: String): Flow<Int?>
 
+    // Удаляем конкретную тренировку
+    @Query("DELETE FROM workouts WHERE id = :workoutId")
+    suspend fun deleteWorkoutById(workoutId: Long)
 
+    // Удаляем конкретный подход
+    @Query("DELETE FROM workout_sets WHERE id = :setId")
+    suspend fun deleteSetById(setId: Long)
 
+    @Query("UPDATE workouts SET duration = :duration WHERE id = :workoutId")
+    suspend fun updateWorkoutDuration(workoutId: Long, duration: Long)
 
+    @Query("SELECT * FROM workouts WHERE isActive = 1 LIMIT 1")
+    fun getActiveWorkout(): Flow<WorkoutEntity?>
 
+    @Query("UPDATE workouts SET isActive = :isActive WHERE id = :workoutId")
+    suspend fun updateActiveStatus(workoutId: Long, isActive: Boolean)
 }

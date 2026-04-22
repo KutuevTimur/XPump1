@@ -1,8 +1,9 @@
 package com.timur.xpump.model
 
 data class Workout(
-    val id: Long,
+    val id: Long = 0,
     val name: String,
-    val date: Long = 0, // Добавлено поле date
+    val dateFormatted: String = "",
+    val duration: Long = 0, // Это поле ОБЯЗАТЕЛЬНО должно быть тут
     val sets: MutableList<WorkoutSet> = mutableListOf()
 )

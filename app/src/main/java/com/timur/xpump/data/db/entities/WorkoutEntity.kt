@@ -2,10 +2,15 @@ package com.timur.xpump.data.db.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.Date
 
-@Entity(tableName = "workouts") // [cite: 53]
+@Entity(tableName = "workouts")
 data class WorkoutEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0, // Пусть база сама ставит ID [cite: 252]
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     val name: String,
-    val date: Long = System.currentTimeMillis() // Добавляем дату, как в плане [cite: 252, 253]
+    val date: Long = System.currentTimeMillis(),
+    val duration: Long = 0,
+    val isActive: Boolean = false,
+    val startTime: Long = 0
 )

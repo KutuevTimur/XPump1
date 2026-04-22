@@ -2,31 +2,30 @@ package com.timur.xpump.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.timur.xpump.data.db.entities.WorkoutEntity
-import com.timur.xpump.data.db.entities.WorkoutSetEntity
 import com.timur.xpump.data.repository.WorkoutRepository
 import com.timur.xpump.model.Workout
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import com.timur.xpump.model.WorkoutSet
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class WorkoutHistoryViewModel(private val repository: WorkoutRepository) : ViewModel() {
+
+    // Форматер: переводит системное время в "20 апр 2026, 15:30"
+    // Теперь будет: "понедельник, 20 апреля, 14:30"
+    private val formatter = SimpleDateFormat("EEEE, d MMMM, HH:mm", Locale("ru"))
 
     val workouts: StateFlow<List<Workout>> = repository.allWorkoutsWithSets.map { list ->
         list.map { item ->
             Workout(
                 id = item.workout.id,
                 name = item.workout.name,
-                date = item.workout.date, // Теперь дата прокидывается!
+                dateFormatted = formatter.format(Date(item.workout.date)),
+                duration = item.workout.duration, // ДОБАВЬ ЭТУ СТРОЧКУ!
                 sets = item.sets.map {
-                    com.timur.xpump.model.WorkoutSet(
-                        weight = it.weight,
-                        reps = it.reps,
-                        exerciseName = it.exerciseName ?: "Упражнение"
-                    )
+                    WorkoutSet(id = it.id, weight = it.weight.toInt(), reps = it.reps.toInt(), exerciseName = it.exerciseName ?: "Упражнение")
                 }.toMutableList()
             )
         }
@@ -36,16 +35,17 @@ class WorkoutHistoryViewModel(private val repository: WorkoutRepository) : ViewM
         initialValue = emptyList()
     )
 
-    fun addRandomWorkout() = viewModelScope.launch {
-        val timestamp = Calendar.getInstance().timeInMillis
-        val newWorkout = WorkoutEntity(name = "Workout $timestamp", date = timestamp)
-        val workoutId = repository.insertWorkout(newWorkout)
+    // Нормальное создание новой тренировки (как в Профиле)
+    fun createNewWorkout(onCreated: (Long) -> Unit) {
+        viewModelScope.launch {
+            val id = repository.createEmptyWorkout("Новая тренировка")
+            onCreated(id)
+        }
+    }
 
-        for (i in 1..3) {
-            val weight = (50..100).random()
-            val reps = (8..12).random()
-            val exerciseName = if (i % 2 == 0) "Жим" else "Присед"
-            repository.addSet(workoutId, weight, reps, exerciseName)
+    fun deleteWorkout(workoutId: Long) {
+        viewModelScope.launch {
+            repository.deleteWorkout(workoutId)
         }
     }
 }
