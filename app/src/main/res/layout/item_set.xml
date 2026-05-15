@@ -1,93 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginEnd="8dp"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
     android:layout_marginBottom="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutline"
-    app:strokeWidth="1dp">
+    android:background="?attr/selectableItemBackground">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvSetNumber"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:background="@drawable/bg_round_accent"
+        android:gravity="center"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/tvExerciseName"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/tvSetMetrics"
+        app:layout_constraintEnd_toStartOf="@+id/tvSetTypeBadge"
+        app:layout_constraintStart_toEndOf="@id/tvSetNumber"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Жим лежа" />
 
-        <TextView
-            android:id="@+id/tvSetNumberBadge"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="@drawable/bg_round_accent"
-            android:gravity="center"
-            android:text="1"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:backgroundTint="@color/design_default_color_primary" />
+    <TextView
+        android:id="@+id/tvSetMetrics"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="?attr/colorOutline"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvSetTypeBadge"
+        app:layout_constraintStart_toEndOf="@id/tvSetNumber"
+        app:layout_constraintTop_toBottomOf="@+id/tvExerciseName"
+        tools:text="80 кг × 10" />
 
-        <TextView
-            android:id="@+id/tvExerciseName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintBottom_toTopOf="@id/tvSetDetails"
-            app:layout_constraintEnd_toStartOf="@id/guideline_center"
-            app:layout_constraintStart_toEndOf="@id/tvSetNumberBadge"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Жим лежа на наклонной скамье" />
+    <TextView
+        android:id="@+id/tvSetTypeBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#1A000000"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible"
+        tools:text="РАЗМИНКА" />
 
-        <TextView
-            android:id="@+id/tvSetDetails"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="14sp"
-            android:textColor="?attr/colorOutline"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline_center"
-            app:layout_constraintStart_toEndOf="@id/tvSetNumberBadge"
-            app:layout_constraintTop_toBottomOf="@id/tvExerciseName"
-            tools:text="90 кг x 10 повторений" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline_center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.7" />
-
-        <TextView
-            android:id="@+id/tvSetWeightAndReps"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:gravity="end"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorPrimary"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/guideline_center"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="90 kg x 10" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

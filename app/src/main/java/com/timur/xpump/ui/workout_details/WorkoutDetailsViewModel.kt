@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.timur.xpump.data.db.entities.WorkoutWithSets
 import com.timur.xpump.data.repository.WorkoutRepository
+import com.timur.xpump.utils.ExerciseUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -11,6 +12,10 @@ import kotlinx.coroutines.launch
 class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewModel() {
 
     private var workoutId: Long = -1L
+
+    // Храним время отдыха в секундах (по умолчанию 90)
+    private var _defaultRestTimeSeconds = 90
+    val defaultRestTimeSeconds: Int get() = _defaultRestTimeSeconds
 
     // Реактивное состояние экрана
     private val _workoutData = MutableStateFlow<WorkoutWithSets?>(null)
@@ -28,22 +33,10 @@ class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewM
         }
     }
 
-    fun addSet(weightText: String, repsText: String): Boolean {
-        val weight = weightText.toIntOrNull()
-        val reps = repsText.toIntOrNull()
-        if (weight == null || reps == null || weight <= 0 || reps <= 0) return false
-
-        // Пишем в БД!
-        viewModelScope.launch {
-            repository.addSet(workoutId, weight, reps)
-        }
-        return true
-    }
-
-    fun removeSet() {
-        // Удаляем из БД!
-        viewModelScope.launch {
-            repository.removeLastSet(workoutId)
+    fun updateDefaultRestTime(timeStr: String) {
+        val seconds = ExerciseUtils.parseMMSSToSeconds(timeStr)
+        if (seconds > 0) {
+            _defaultRestTimeSeconds = seconds
         }
     }
 
@@ -53,10 +46,15 @@ class WorkoutDetailsViewModel(private val repository: WorkoutRepository) : ViewM
         if (exerciseName.isEmpty()) return false
 
         viewModelScope.launch {
-            // Note: Updated to call the correct repository method signature
-            repository.addSet(workoutId, weight, reps, exerciseName)
+            repository.addSet(workoutId, weight, reps, exerciseName, setType, timeSeconds, distance)
         }
         return true
+    }
+
+    fun removeSet() {
+        viewModelScope.launch {
+            repository.removeLastSet(workoutId)
+        }
     }
 
     fun deleteSpecificSet(setId: Long) {

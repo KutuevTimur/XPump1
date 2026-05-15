@@ -41,7 +41,8 @@ android {
 }
 
 dependencies {
-
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -66,11 +67,9 @@ dependencies {
 // Корутины
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-
-
-    val roomVersion = "2.6.1"
+    // Room version updated to support Kotlin 2.1+ metadata
+    val roomVersion = "2.7.0-alpha11"
     implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion") // Для поддержки Flow и Coroutines [cite: 217]
-    kapt("androidx.room:room-compiler:$roomVersion") // Обработчик аннотаций [cite: 217]
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 }
-

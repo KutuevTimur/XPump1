@@ -39,8 +39,18 @@ class WorkoutRepository(private val workoutDao: WorkoutDao) {
         return workoutDao.insertWorkout(WorkoutEntity(name = name))
     }
 
-    suspend fun addSet(workoutId: Long, weight: Int, reps: Int) {
-        workoutDao.insertSet(WorkoutSetEntity(workoutId = workoutId, weight = weight, reps = reps))
+    suspend fun addSet(workoutId: Long, weight: Int, reps: Int, exerciseName: String, setType: String, timeSeconds: Int, distance: Double) {
+        workoutDao.insertSet(
+            WorkoutSetEntity(
+                workoutId = workoutId,
+                weight = weight,
+                reps = reps,
+                exerciseName = exerciseName,
+                setType = setType,
+                timeSeconds = timeSeconds,
+                distance = distance
+            )
+        )
     }
 
     suspend fun removeLastSet(workoutId: Long) {

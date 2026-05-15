@@ -30,6 +30,7 @@ import com.timur.xpump.ViewModelFactory
 import com.timur.xpump.XPumpApp
 import com.timur.xpump.databinding.FragmentWorkoutDetailsBinding
 import com.timur.xpump.model.WorkoutSet
+import com.timur.xpump.utils.TimeMaskWatcher
 import kotlinx.coroutines.launch
 
 class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
@@ -78,10 +79,10 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
             inputBinding.tilExerciseName.visibility = View.GONE
             inputBinding.tilWeight.visibility = View.GONE
             inputBinding.tilReps.visibility = View.GONE
+            inputBinding.tilDefaultRest.visibility = View.GONE
             inputBinding.btnAddSet.visibility = View.GONE
             binding.btnFinishWorkout.visibility = View.GONE
             
-            // Опционально: можно изменить заголовок, чтобы было понятно, что это просмотр
             binding.tvWorkoutTitle.append(" (Архив)")
         } else {
             val suggestions = arrayOf(
@@ -96,7 +97,15 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
             inputBinding.etExerciseName.setAdapter(adapter)
             inputBinding.etExerciseName.threshold = 1
             
-            // Устанавливаем базовую видимость при загрузке экрана
+            // Идеальная маска для времени подхода
+            inputBinding.etTime.addTextChangedListener(TimeMaskWatcher(inputBinding.etTime))
+            
+            // Идеальная маска для времени отдыха по умолчанию
+            inputBinding.etDefaultRest.addTextChangedListener(TimeMaskWatcher(inputBinding.etDefaultRest))
+            inputBinding.etDefaultRest.addTextChangedListener { text ->
+                viewModel.updateDefaultRestTime(text.toString())
+            }
+
             inputBinding.tilWeight.visibility = View.VISIBLE
             inputBinding.tilReps.visibility = View.VISIBLE
             inputBinding.tilDistance.visibility = View.GONE
@@ -131,36 +140,22 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
         binding.rvSets.layoutManager = LinearLayoutManager(requireContext())
         binding.rvSets.adapter = setsAdapter
 
-        // ЖИВОЙ UI: Слушаем изменения из базы данных
+        // ЖИВОЙ UI
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.workoutData.collect { data ->
                 if (data != null) {
                     binding.tvWorkoutTitle.text = data.workout.name
                     binding.tvSetsCount.text = "Подходов: ${data.sets.size}"
 
-                    if (isViewMode) {
-                        binding.workoutChronometer.visibility = View.GONE
-                        
-                        val duration = data.workout.duration
-                        if (duration > 0) {
-                            binding.tvFinalDuration.visibility = View.VISIBLE
-                            // Форматируем секунды в "ММ:СС"
-                            val minutes = duration / 60
-                            val seconds = duration % 60
-                            binding.tvFinalDuration.text = String.format("Время: %02d:%02d", minutes, seconds)
-                        }
-                    } else {
-                        // Вычисляем, сколько времени прошло с начала тренировки
+                    if (!isViewMode) {
                         val startTime = data.workout.startTime
                         val currentTime = System.currentTimeMillis()
                         val elapsedMillis = currentTime - startTime
                         
-                        // Устанавливаем базу для Chronometer с учетом прошедшего времени
                         binding.workoutChronometer.base = SystemClock.elapsedRealtime() - elapsedMillis
                         binding.workoutChronometer.start()
                     }
 
-                    // Превращаем данные из базы в модели для адаптера
                     val mappedSets = data.sets.map {
                         WorkoutSet(id = it.id, weight = it.weight, reps = it.reps, exerciseName = it.exerciseName ?: "Упражнение", setType = it.setType, timeSeconds = it.timeSeconds, distance = it.distance)
                     }
@@ -176,7 +171,6 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
             val distanceText = inputBinding.etDistance.text?.toString()?.trim().orEmpty()
             val timeText = inputBinding.etTime.text?.toString()?.trim().orEmpty()
             
-            // Определяем тип подхода из ChipGroup
             val setType = when (inputBinding.cgSetType.checkedChipId) {
                 R.id.chipWarmup -> "WARMUP"
                 R.id.chipDropset -> "DROPSET"
@@ -185,21 +179,21 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
             }
 
             val distance = distanceText.toDoubleOrNull() ?: 0.0
-            val timeSeconds = timeText.toIntOrNull() ?: 0
+            val timeSeconds = com.timur.xpump.utils.ExerciseUtils.parseMMSSToSeconds(timeText)
 
             if (!viewModel.addSet(weightText, repsText, exerciseName, setType, timeSeconds, distance)) {
                 Toast.makeText(requireContext(), "Заполни нужные поля!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Очищаем нужные поля, оставляя название упражнения
             inputBinding.etWeight.text?.clear()
             inputBinding.etReps.text?.clear()
             inputBinding.etDistance.text?.clear()
             inputBinding.etTime.text?.clear()
             inputBinding.etWeight.requestFocus()
             
-            startRestTimer(90000) // Запуск таймера отдыха
+            val restMillis = viewModel.defaultRestTimeSeconds * 1000L
+            startRestTimer(restMillis)
         }
 
         binding.btnRestSkip.setOnClickListener {
@@ -282,17 +276,31 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
         timeLeftInMillis = timeInMillis
         binding.restTimerCard.visibility = View.VISIBLE
 
+        // Флаг, чтобы предупреждение сработало ровно 1 раз
+        var isPreAlertFired = false 
+
         restCountDownTimer = object : CountDownTimer(timeLeftInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 timeLeftInMillis = millisUntilFinished
-                val minutes = (timeLeftInMillis / 1000) / 60
-                val seconds = (timeLeftInMillis / 1000) % 60
+                val totalSeconds = (timeLeftInMillis / 1000)
+                val minutes = totalSeconds / 60
+                val seconds = totalSeconds % 60
+                
                 binding.tvRestTimer.text = String.format("%02d:%02d", minutes, seconds)
+
+                // СИСТЕМА ПРЕДУПРЕЖДЕНИЯ (РОВНО ЗА 5 СЕКУНД)
+                if (totalSeconds == 5L && !isPreAlertFired) {
+                    isPreAlertFired = true
+                    vibratePreAlert() // Та самая двойная пульсация
+                }
             }
+
             override fun onFinish() {
-                vibratePhone()
+                vibratePhone() // Мощный финальный вибросигнал
                 binding.tvRestTimer.text = "Пора!"
-                binding.tvRestTimer.postDelayed({ binding.restTimerCard.visibility = View.GONE }, 2000)
+                binding.tvRestTimer.postDelayed({ 
+                    binding.restTimerCard.visibility = View.GONE 
+                }, 2000)
             }
         }.start()
     }
@@ -304,6 +312,19 @@ class WorkoutDetailsFragment : Fragment(R.layout.fragment_workout_details) {
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(500)
+        }
+    }
+
+    private fun vibratePreAlert() {
+        val vibrator = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        // Паттерн: ждать 0мс, вибрировать 100мс, пауза 100мс, вибрировать 100мс
+        val pattern = longArrayOf(0, 100, 100, 100)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(pattern, -1)
         }
     }
 

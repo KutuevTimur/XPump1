@@ -49,6 +49,22 @@
             android:name="mode"
             app:argType="string"
             android:defaultValue="edit" />
+
+        <action
+            android:id="@+id/action_workoutDetailsFragment_to_workoutSummaryFragment"
+            app:destination="@id/workoutSummaryFragment"
+            app:popUpTo="@id/profileFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/workoutSummaryFragment"
+        android:name="com.timur.xpump.ui.workout_summary.WorkoutSummaryFragment"
+        android:label="Итоги тренировки">
+        <argument
+            android:name="workout_id"
+            app:argType="long" />
     </fragment>
 
 </navigation>
